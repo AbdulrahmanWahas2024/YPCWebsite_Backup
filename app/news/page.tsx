@@ -27,25 +27,82 @@ export default function NewsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showShareSuccess, setShowShareSuccess] = useState(false);
 
-  const categories = ['الكل', 'أخبار الشركة', 'الفعاليات', 'التعاميم'];
-  const archiveYears = ['2024', '2023', '2022', '2021'];
+  /* const categories = ['الكل', 'أخبار الشركة', 'الفعاليات', 'التعاميم']; */
+  const categories = [  // فلترة الاخبار حسب الفئات الموجودة في النظام erpnext
+    'الكل',
+    ...Array.from(
+      new Set(news.map(n => n.category).filter(Boolean))
+    )
+  ];
+  /* const archiveYears = ['2024', '2023', '2022', '2021']; */
+  // ارشفت الاخبار حسب السنوات الموجودة في النظام erpnext
+  const archiveYears = Object.entries(
+    news.reduce((acc: any, item: any) => {
+
+      const year = new Date(item.date).getFullYear();
+
+      if (!acc[year]) acc[year] = 0;
+
+      acc[year]++;
+
+      return acc;
+
+    }, {})
+  );
 
   useEffect(() => {
     const fetchNews = async () => {
+
       try {
+
         setLoading(true);
-        const data = await apiService.get<any>(API_CONFIG.DOC_TYPES.NEWS);
-        setNews(data);
-      } catch (err) {
+
+        const fields = encodeURIComponent(JSON.stringify([
+          "name",
+          "title",
+          "category",
+          "date",
+          "image",
+          "description",
+          "published"
+        ]));
+
+        const filters = encodeURIComponent(JSON.stringify([
+          ["published", "=", 1]
+        ]));
+
+        const url =
+          `${API_CONFIG.BASE_URL}/api/resource/${API_CONFIG.DOC_TYPES.NEWS}` +
+          `?fields=${fields}` +
+          `&filters=${filters}` +
+          `&order_by=date desc`;
+
+        console.log("ALL NEWS URL:", url);
+
+        const response = await fetch(url);
+
+        const result = await response.json();
+
+        console.log("ALL NEWS:", result);
+
+        setNews(result.data || []);
+
+      } catch (error) {
+
+        console.error("All News Error:", error);
+
       } finally {
+
         setLoading(false);
+
       }
+
     };
     fetchNews();
   }, []);
 
   const filteredNews = news.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = item.title .toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'الكل' || item.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
@@ -141,24 +198,53 @@ export default function NewsPage() {
               ) : (
                 filteredNews.map((item, idx) => (
                   <motion.article
-                    key={item.id}
+                    key={item.name}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.1 }}
                     className="group bg-white rounded-2xl overflow-hidden border border-border hover:border-accent transition-all hover:shadow-lg"
                   >
-                    <div className="relative h-48 overflow-hidden">
-                      <Image 
-                        src={item.image} 
-                        alt={item.title} 
-                        fill 
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="absolute top-3 right-3 px-2 py-1 rounded bg-primary/90 text-white text-[8px] font-black uppercase tracking-widest">
-                        {item.category}
-                      </div>
+                    <div className="relative h-48 overflow-hidden bg-gray-100">
+                      {item.image ? (
+
+                        item.image.includes("/private/") ? (
+
+                          // 🔒 صورة Private
+                          <div className="flex flex-col items-center justify-center h-full text-red-500 text-sm font-bold text-center p-4">
+                            🔒 الصورة محمية
+                            <span className="text-xs text-gray-500 mt-2">
+                              يرجى إزالة Private من ERPNext
+                            </span>
+                          </div>
+
+                        ) : (
+
+                            <Image
+                              src={
+                                item.image.startsWith("http")
+                                  ? item.image
+                                  : `${API_CONFIG.BASE_URL}${item.image}`
+                              }
+                              alt={item.title || "news image"}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                              className="object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+
+  )
+  ) : (
+    // 📦 لا توجد صورة
+    <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+      لا توجد صورة
+    </div>
+  )
+}
+
+                    <div className="absolute top-3 right-3 px-2 py-1 rounded bg-primary/90 text-white text-[8px] font-black uppercase tracking-widest">
+                      {item.category}
+                    </div>
                     </div>
                     <div className="p-6">
                       <div className="flex items-center gap-2 text-text-secondary/60 text-[10px] mb-3">
@@ -169,11 +255,11 @@ export default function NewsPage() {
                         {item.title}
                       </h2>
                       <p className="text-text-secondary text-xs leading-relaxed mb-6 line-clamp-2">
-                        {item.summary || 'تفاصيل الخبر تظهر هنا بشكل مختصر وواضح للقارئ...'}
+                        {item.description || 'تفاصيل الخبر تظهر هنا بشكل مختصر وواضح للقارئ...'}
                       </p>
                       
                       <div className="flex items-center justify-between pt-4 border-t border-border">
-                        <Link href={`/news/${item.id}`} className="text-accent font-bold text-xs flex items-center gap-1 hover:gap-2 transition-all">
+                        <Link href={`/news/${item.name}`} className="text-accent font-bold text-xs flex items-center gap-1 hover:gap-2 transition-all">
                           {t('common.read_more')}
                           <ArrowRight size={14} className="rtl:rotate-180" />
                         </Link>
@@ -233,15 +319,17 @@ export default function NewsPage() {
                 الأرشيف السنوي
               </h3>
               <div className="space-y-2">
-                {archiveYears.map((year) => (
+              {
+                archiveYears.map(([year, count]) => (
                   <button 
                     key={year}
                     className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-bg-soft text-text-secondary font-bold transition-all group"
                   >
                     <span>أخبار عام {year}</span>
-                    <span className="text-[10px] bg-border px-2 py-0.5 rounded-full group-hover:bg-primary group-hover:text-white">12</span>
+                    <span className="text-[10px] bg-border px-2 py-0.5 rounded-full group-hover:bg-primary group-hover:text-white">{String(count)}</span>
                   </button>
-                ))}
+                ))
+              }
               </div>
             </div>
 

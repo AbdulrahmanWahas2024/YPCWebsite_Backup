@@ -37,7 +37,7 @@ export const PageHero = ({ title, subtitle, image = 'https://picsum.photos/seed/
             className="max-w-3xl"
           >
             <div className="w-12 h-1 bg-accent mb-6" />
-            <h1 className="text-4xl lg:text-6xl font-black text-white mb-4 tracking-tight">
+            <h1 className="text-4xl lg:text-5xl font-black text-white mb-4 tracking-tight">
               {title}
             </h1>
             {subtitle && (

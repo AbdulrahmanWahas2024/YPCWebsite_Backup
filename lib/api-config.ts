@@ -1,5 +1,6 @@
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://192.168.4.177',
+  SITE_URL: 'http://192.168.4.177:3000', // رابط الموقع الثابت 
   API_KEY: process.env.ERP_API_KEY,
   API_SECRET: process.env.ERP_API_SECRET,
   IS_CONFIGURED: !!process.env.NEXT_PUBLIC_API_URL,
@@ -9,7 +10,7 @@ export const API_CONFIG = {
   },
   DOC_TYPES: {
     NEWS: 'YPC News',
-    PROJECTS: 'YPC Projects',
+    PROJECTS: 'YPC Project',
     FUEL_PRICES: 'YPC Fuel Prices',
     TENDERS: 'YPC Tenders',
     COMPLAINTS: 'YPC Complaints',

@@ -22,44 +22,263 @@ export default function NewsDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
-  const galleryImages = [
+  /* const galleryImages = [
     'https://picsum.photos/seed/news1/800/600',
     'https://picsum.photos/seed/news2/800/600',
     'https://picsum.photos/seed/news3/800/600',
     'https://picsum.photos/seed/news4/800/600',
-  ];
+  ]; */
 
-  useEffect(() => {
+ /*  useEffect(() => {
+
     const fetchNewsDetails = async () => {
       try {
         setLoading(true);
-        // In a real app, we'd fetch by slug. Here we fetch all and find the one.
-        const data = await apiService.get<any>(API_CONFIG.DOC_TYPES.NEWS);
-        const item = data.find((n: any) => (n.name || n.id).toString() === slug);
-        
+        const fields = encodeURIComponent(JSON.stringify([
+          "name",
+          "title",
+          "category",
+          "date",
+          "image",
+          "content",
+          "published"
+        ]));
+
+        const filters = encodeURIComponent(JSON.stringify([
+          ["published", "=", 1],
+          ["name", "=", slug]
+        ]));
+
+        const url =
+          `${API_CONFIG.BASE_URL}/api/resource/${API_CONFIG.DOC_TYPES.NEWS}` +
+          `?fields=${fields}` +
+          `&filters=${filters}`;
+
+        console.log("DETAIL URL:", url);
+
+        const response = await fetch(url);
+
+        const result = await response.json();
+
+        console.log("DETAIL RESULT:", result);
+
+        const item = result.data?.[0];
+
         if (item) {
+
           setNews({
-            id: item.name || item.id,
-            title: item.title || item.news_title,
-            date: item.publication_date || item.date || '2026-03-02',
-            category: item.category || 'أخبار',
-            image: item.image || `https://picsum.photos/seed/${item.name || Math.random()}/1920/1080`,
-            content: item.content || 'هذا النص هو مثال لنص يمكن أن يستبدل في نفس المساحة، لقد تم توليد هذا النص من مولد النص العربى، حيث يمكنك أن تولد مثل هذا النص أو العديد من النصوص الأخرى إضافة إلى زيادة عدد الحروف التى يولدها التطبيق. إذا كنت تحتاج إلى عدد أكبر من الفقرات يتيح لك مولد النص العربى زيادة عدد الفقرات كما تريد، النص لن يبدو مقسما ولا يحوي أخطاء لغوية، مولد النص العربى مفيد لمصممي المواقع على وجه الخصوص، حيث يحتاج العميل فى كثير من الأحيان أن يطلع على صورة حقيقية لتصميم الموقع.'
+            id: item.name,
+            title: item.title,
+            date: item.date,
+            category: item.category,
+
+            image: item.image
+              ? (item.image.startsWith('http')
+                ? item.image
+                : `${API_CONFIG.BASE_URL}${item.image}`)
+              : "/placeholder-news.jpg",
+
+            content: item.content || item.description
           });
+
+        } else {
+          setNews(null);
         }
+
       } catch (err) {
-        console.error(err);
+
+        console.error("DETAIL ERROR:", err);
+
       } finally {
+
         setLoading(false);
       }
-    };
-    fetchNewsDetails();
-  }, [slug]);
 
+    };
+
+    if (slug) {
+      fetchNewsDetails();
+    }
+
+  }, [slug]); */
+  useEffect(() => {
+    const fetchNewsDetails = async () => {
+
+      try {
+
+        setLoading(true);
+
+        const fields = encodeURIComponent(JSON.stringify([
+          "name",
+          "title",
+          "category",
+          "date",
+          "image",
+          "content",
+          "description",
+          "gallery_images"
+        ]));
+
+        const url =
+          `${API_CONFIG.BASE_URL}/api/resource/${API_CONFIG.DOC_TYPES.NEWS}/${slug}` +
+          `?fields=${fields}`;
+
+        console.log("DETAIL URL:", url);
+
+        const response = await fetch(url);
+
+        const result = await response.json();
+
+        console.log("DETAIL RESULT:", result);
+
+        const item = result.data;
+
+        if (item) {
+
+          // تجهيز صور المعرض
+
+          const galleryImages = item.gallery_images
+            ?.map((img: any) =>
+              img.image
+                ? (
+                  img.image.startsWith("http")
+                    ? img.image
+                    : `${API_CONFIG.BASE_URL}${img.image}`
+                )
+                : null
+            )
+            .filter(Boolean) || [];
+
+          setGalleryImages(galleryImages);
+
+          setNews({
+
+            id: item.name,
+            title: item.title,
+            date: item.date,
+            category: item.category,
+
+            image: item.image
+              ? `${API_CONFIG.BASE_URL}${item.image}`
+              : "/news-placeholder.jpg",
+
+            content: item.content || item.description
+
+          });
+
+        }
+
+      } catch (err) {
+
+        console.error("DETAIL ERROR:", err);
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    };
+
+    /* const fetchNewsDetails = async () => {
+
+      try {
+
+        setLoading(true);
+
+        const fields = encodeURIComponent(JSON.stringify([
+          "name",
+          "title",
+          "category",
+          "date",
+          "image",
+          "content",
+          "description",
+          "gallery_images"
+        ]));
+
+        const filters = encodeURIComponent(JSON.stringify([
+          ["name", "=", slug]
+        ]));
+
+        const url =
+          `${API_CONFIG.BASE_URL}/api/resource/${API_CONFIG.DOC_TYPES.NEWS}` +
+          `?fields=${fields}` +
+          `&filters=${filters}`;
+
+        console.log("DETAIL URL:", url);
+
+        const response = await fetch(url);
+
+        const result = await response.json();
+
+        console.log("DETAIL RESULT:", result);
+
+        const item = result.data?.[0];
+
+        if (item) {
+
+          setNews({
+            id: item.name,
+            title: item.title,
+            date: item.date,
+            category: item.category,
+
+            image: item.image
+              ? `${API_CONFIG.BASE_URL}${item.image}`
+              : "/news-placeholder.jpg",
+
+            content: item.content || item.description
+          });
+
+        } else {
+
+          setNews(null);
+
+        }
+
+      } catch (err) {
+
+        console.error("DETAIL ERROR:", err);
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    }; */
+
+    if (slug) {
+      fetchNewsDetails();
+    }
+
+  }, [slug]);
   const handleShare = () => {
     setShowToast(true);
   };
+  const shareUrl =
+    typeof window !== "undefined"
+      ? window.location.href
+      : "";
+
+  const shareText = news?.title || "";
+  const shareLinks = {
+    facebook:
+      `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
+
+    twitter:
+      `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`,
+
+    whatsapp:
+      `https://wa.me/?text=${shareText} ${shareUrl}`,
+
+    linkedin:
+      `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`
+  };
+  
 
   if (loading) {
     return (
@@ -108,13 +327,22 @@ export default function NewsDetailsPage() {
             {/* Social Share */}
             <div className="flex items-center gap-3">
               <span className="text-text-secondary font-bold text-sm ml-2">مشاركة:</span>
-              <button onClick={handleShare} className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+              <button
+                onClick={() => window.open(shareLinks.facebook, '_blank')}
+                className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+              >
                 <Facebook size={18} />
               </button>
-              <button onClick={handleShare} className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+              <button
+                onClick={() => window.open(shareLinks.twitter, '_blank')}
+                className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+              >
                 <Twitter size={18} />
               </button>
-              <button onClick={handleShare} className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm">
+              <button
+                onClick={() => window.open(shareLinks.whatsapp, '_blank')}
+                className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+              >
                 <MessageCircle size={18} />
               </button>
             </div>
@@ -144,8 +372,11 @@ export default function NewsDetailsPage() {
                   className="absolute inset-0"
                 >
                   <Image 
-                    src={galleryImages[activeImage]} 
-                    alt={`Gallery ${activeImage}`} 
+                    src={
+                      galleryImages[activeImage]
+                      || "/news-placeholder.jpg"
+                    }
+                    alt="Gallery"
                     fill 
                     className="object-contain"
                     referrerPolicy="no-referrer"
@@ -170,15 +401,33 @@ export default function NewsDetailsPage() {
             </div>
 
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {galleryImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImage(idx)}
-                  className={`relative w-20 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${activeImage === idx ? 'border-accent scale-105 shadow-md' : 'border-transparent opacity-50 hover:opacity-100'}`}
-                >
-                  <Image src={img} alt={`Thumb ${idx}`} fill className="object-cover" referrerPolicy="no-referrer" />
-                </button>
-              ))}
+              {galleryImages.length > 0 ? (
+
+                galleryImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(idx)}
+                    className={`relative w-20 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${activeImage === idx
+                        ? 'border-accent scale-105 shadow-md'
+                        : 'border-transparent opacity-50 hover:opacity-100'
+                      }`}
+                  >
+                    <Image
+                      src={img}
+                      alt={`Thumb ${idx}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))
+
+              ) : (
+
+                <p className="text-gray-400">
+                  لا توجد صور للخبر
+                </p>
+
+              )}
             </div>
           </div>
 

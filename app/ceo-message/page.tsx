@@ -31,7 +31,7 @@ export default function CEOMessagePage() {
           >
             <div className="relative aspect-[3/4] rounded-[40px] overflow-hidden shadow-2xl border-4 md:border-8 border-white bg-bg-soft">
               <Image 
-                src="https://picsum.photos/seed/ceo/800/1000" 
+                src="http://192.168.4.177" 
                 alt="CEO" 
                 fill 
                 className="object-cover"

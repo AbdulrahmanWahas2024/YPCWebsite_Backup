@@ -65,6 +65,7 @@ export default function HeroSlider() {
               className="object-cover"
               priority
               referrerPolicy="no-referrer"
+              unoptimized // أضف هذا السطر لحل مشكلة الـ 504 فوراً
             />
             <div className="absolute inset-0 bg-primary-dark/20" />
             <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/60 via-transparent to-transparent" />
